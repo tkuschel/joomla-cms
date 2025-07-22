@@ -2,6 +2,7 @@
 	'use strict';
 
 	var localNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+	var localNumbers = ['0','1','2','3','4','5','6','7','8','9'];
 
 /** BEGIN: DATE OBJECT PATCHES **/
 /** Adds the number of days array to the Date object. */
@@ -15,9 +16,16 @@ Date.HOUR   = 60 * Date.MINUTE;
 Date.DAY    = 24 * Date.HOUR;
 Date.WEEK   =  7 * Date.DAY;
 
-/** Constant used to switch between 1900 and 2000 when entered only 2 digits */
-/** history: November 2016 : 29, July 2025 : 38
-const TWODIGITYEAR = 38;
+/** Constant for 2-digit years, used to switch between 1900 and 2000*/
+/** e.g. y > 38 => 1900+y else 2000+y, so at 60 it becomes 1960 and 25 becomes 2025 */
+/** history: November 2016 : 29,
+ *             August 2025 : 38 */
+let TWODIGITYEAR = [ { datetype: "gregorian", switch: 38, oldyear: 1900, newyear: 2000} ];
+/** Jalali difference to switch b/w 1300 and 1400 */
+/** Jalali year is about -621 compared to Gregorian */
+/** history: November 2016 : 00 (only 1300),
+ *             August 2025 : 17 */
+TWODIGITYEAR.push({ datetype: "jalali" , switch: 17, oldyear: 1300, newyear: 1400});
 
 /** MODIFY ONLY THE MARKED PARTS OF THE METHODS **/
 /************ START *************/
@@ -361,7 +369,7 @@ Date.prototype.print = function (str, dateType, translate, localStrings) {
 	// FIXME: %x : preferred date representation for the current locale without the time
 	// FIXME: %X : preferred time representation for the current locale without the date
 	s["%y"] = ('' + y).substring(2);                                                            // year without the century (range 00 to 99)
-	s["%Y"] = y;                                                                                // year with the century
+	s["%Y"] = y % 10000;                                                                        // year with the century (secured to max 9999)
 	s["%%"] = "%";                                                                              // a literal '%' character
 
 	var re = /%./g;
@@ -403,7 +411,14 @@ Date.parseFieldDate = function(str, fmt, dateType, localStrings) {
 			case "%Y":
 			case "%y":
 				y = parseInt(a[i], 10);
-				(y < 100) && (y += (y > 29) ? 1900 : 2000);
+				if(y < 100) {
+					const twodigit = TWODIGITYEAR.find(val => val.datetype === dateType);
+					y += (y > twodigit.switch) ? twodigit.oldyear : twodigit.newyear;
+				} else if (y > 9999) {
+					y = 0;
+					str = '';
+					return null;
+				}
 				break;
 
 			case "%b":
@@ -436,11 +451,11 @@ Date.parseFieldDate = function(str, fmt, dateType, localStrings) {
 				break;
 		}
 	}
-	if (isNaN(y)) y = today.getFullYear();
-	if (isNaN(m)) m = today.getMonth();
-	if (isNaN(d)) d = today.getDate();
-	if (isNaN(hr)) hr = today.getHours();
-	if (isNaN(min)) min = today.getMinutes();
+	if (isNaN(y)) y = today.getLocalFullYear(dateType);
+	if (isNaN(m)) m = today.getLocalMonth(dateType);
+	if (isNaN(d)) d = today.getLocalDate(dateType);
+	if (isNaN(hr)) hr = today.getLocalHours(dateType);
+	if (isNaN(min)) min = today.getLocalMinutes(dateType);
 	if (y != 0 && m != -1 && d != 0)
 		return new Date(y, m, d, hr, min, 0);
 	y = 0; m = -1; d = 0;
@@ -460,15 +475,32 @@ Date.parseFieldDate = function(str, fmt, dateType, localStrings) {
 			m = a[i]-1;
 		} else if (parseInt(a[i], 10) > 31 && y == 0) {
 			y = parseInt(a[i], 10);
-			(y < 100) && (y += (y > 29) ? 1900 : 2000);
+			if(y < 100) {
+				const twodigit = TWODIGITYEAR.find(val => val.datetype === dateType);
+				y += (y > twodigit.switch) ? twodigit.oldyear : twodigit.newyear;
+			} else if (y > 9999) {
+				y = 0;
+				str = '';
+				return null;
+			}
 		} else if (d == 0) {
 			d = a[i];
 		}
 	}
 	if (y == 0)
-		y = today.getFullYear();
+		y = today.getLocalFullYear(dateType);
 	if (m != -1 && d != 0)
 		return new Date(y, m, d, hr, min, 0);
+
+	//change today to jalili if necessary:
+	if (dateType != 'gregorian') {
+		d = today.getLocalDate(dateType),
+		m = today.getLocalMonth(dateType),
+		y = today.getLocalFullYear(dateType);
+		today.setFullYear(y);
+		today.setMonth(m);
+		today.setDate(d);
+	}
 	return today;
 };
 
@@ -539,7 +571,7 @@ JalaliDate.jalaliToGregorian = function(j_y, j_m, j_d)
 
 JalaliDate.checkDate = function(j_y, j_m, j_d)
 {
-	return !(j_y < 0 || j_y > 32767 || j_m < 1 || j_m > 12 || j_d < 1 || j_d >
+	return !(j_y < 0 || j_y > (9999-622) || j_m < 1 || j_m > 12 || j_d < 1 || j_d >
 	(JalaliDate.j_days_in_month[j_m-1] + (j_m == 12 && !((j_y-979)%33%4))));
 };
 
@@ -590,7 +622,10 @@ Date.prototype.setJalaliFullYear = function(y, m, d) {
 	var gm = this.getMonth();
 	var gy = this.getFullYear();
 	var j = JalaliDate.gregorianToJalali(gy, gm+1, gd);
-	if (y < 100) y += 1300;
+	if(y < 100) {
+		const twodigit = TWODIGITYEAR.find(val => val.datetype === dateType);
+		y += (y > twodigit.switch) ? twodigit.oldyear : twodigit.newyear;
+	}
 	j[0] = y;
 	if (m != undefined) {
 		if (m > 11) {

@@ -179,6 +179,16 @@
 			this.inputField.value = inputAltValueDate.print(this.params.dateFormat, this.params.dateType, true, this.strings);
 		} else {
 			this.date = new Date();
+			if (this.params.dateFormat != 'gregorian') {
+				var self = this;
+				var dateType = self.params.dateType;
+				var d = self.date.getLocalDate(dateType),
+					m = self.date.getLocalMonth(dateType),
+					y = self.date.getLocalFullYear(dateType);
+				this.date.setFullYear(y);
+				this.date.setMonth(m);
+				this.date.setDate(d);
+			}
 		}
 	};
 
@@ -1025,26 +1035,28 @@
 			}
 
 			if (calObj) {
-				if (calObj.inputField.value) {
-					if (typeof calObj.params.dateClicked === 'undefined') {
-						calObj.inputField.setAttribute('data-local-value', calObj.inputField.value);
+				var date = null;
+				do {
+					if (calObj.inputField.value) {
+						if (typeof calObj.params.dateClicked === 'undefined') {
+							calObj.inputField.setAttribute('data-local-value', calObj.inputField.value);
 
-						if (calObj.params.dateType !== 'gregorian') {
-							// We need to transform the date for the data-alt-value
-							var ndate, date = Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings);
-							ndate = Date.localCalToGregorian(date.getFullYear(), date.getMonth(), date.getDate());
-							date.setFullYear(ndate[0]);
-							date.setMonth(ndate[1]);
-							date.setDate(ndate[2]);
-							calObj.inputField.setAttribute('data-alt-value', date.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
+							date = Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings);
+							if (date === null) break;
+			
+							if (calObj.params.dateType !== 'gregorian') {
+								// We need to transform the date for the data-alt-value
+								var ndate = Date.localCalToGregorian(date.getFullYear(), date.getMonth(), date.getDate());
+								date.setFullYear(ndate[0]);
+								date.setMonth(ndate[1]);
+								date.setDate(ndate[2]);
+							}
 						} else {
-							calObj.inputField.setAttribute('data-alt-value', Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings)
-								.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
+							calObj.inputField.setAttribute('data-alt-value', calObj.date.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
 						}
-					} else {
-						calObj.inputField.setAttribute('data-alt-value', calObj.date.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
 					}
-				} else {
+				} while(0);
+				if (date === null) {
 					calObj.inputField.setAttribute('data-alt-value', '0000-00-00 00:00:00');
 				}
 				calObj.date = Date.parseFieldDate(calObj.inputField.getAttribute('data-alt-value'), calObj.params.dateFormat, calObj.params.dateType, calObj.strings);

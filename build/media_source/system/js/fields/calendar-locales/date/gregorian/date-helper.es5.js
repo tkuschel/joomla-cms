@@ -12,8 +12,8 @@
 	Date.WEEK   =  7 * Date.DAY;
 
 	/** Constant used to switch between 1900 and 2000 when entered only 2 digits */
-	/** e.g. y < 35 -> 2000+y else 1900+y */
-	/** history: November 2016 : 29, July 2025 : 38
+	/** e.g. y > 38 -> 1900+y else 2000+y */
+	/** history: November 2016 : 29, July 2025 : 38 */
 	const TWODIGITYEAR = 38;
 
 	/** MODIFY ONLY THE MARKED PARTS OF THE METHODS **/

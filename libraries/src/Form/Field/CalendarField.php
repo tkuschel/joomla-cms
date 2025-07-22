@@ -404,15 +404,15 @@ class CalendarField extends FormField
         $app = Factory::getApplication();
 
         if ($this->filterFormat) {
-            $_value = \DateTime::createFromFormat($this->filterFormat, $value);
-            if ($_value === false) {
-                $msg    = Text::_('JERROR_AN_ERROR_HAS_OCCURRED');
-                $label  = $this->getAttribute('label');
+            $val = \DateTime::createFromFormat($this->filterFormat, $value);
+            if ($val === false) {
+                $msg   = Text::_('JERROR_AN_ERROR_HAS_OCCURRED');
+                $label = $this->getAttribute('label');
                 $msg .= ' > ' . Text::_($label) . ' ' . $value;
                 $app->enqueueMessage($msg, 'error');
                 return '';
             }
-            $value = $_value->format('Y-m-d H:i:s');
+            $value = $val->format('Y-m-d H:i:s');
         }
 
         // Get the field filter type.
