@@ -401,11 +401,19 @@ class CalendarField extends FormField
             return '';
         }
 
-        if ($this->filterFormat) {
-            $value = \DateTime::createFromFormat($this->filterFormat, $value)->format('Y-m-d H:i:s');
-        }
-
         $app = Factory::getApplication();
+
+        if ($this->filterFormat) {
+            $val = \DateTime::createFromFormat($this->filterFormat, $value);
+            if ($val === false) {
+                $msg   = Text::_('JERROR_AN_ERROR_HAS_OCCURRED');
+                $label = Text::_($this->getAttribute('label'));
+                $msg .= ' > ' . Text::sprintf('JLIB_FORM_VALIDATE_FIELD_INVALID', $label);
+                $app->enqueueMessage($msg, 'error');
+                return '';
+            }
+            $value = $val->format('Y-m-d H:i:s');
+        }
 
         // Get the field filter type.
         $filter = (string) $this->element['filter'];

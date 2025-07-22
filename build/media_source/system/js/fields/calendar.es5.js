@@ -1033,7 +1033,6 @@
 
 						if (calObj.params.dateType !== 'gregorian') {
 							// We need to transform the date for the data-alt-value
-							//var ndate, date = Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings);
 							var ndate = Date.localCalToGregorian(date.getFullYear(), date.getMonth(), date.getDate());
 							date.setFullYear(ndate[0]);
 							date.setMonth(ndate[1]);
