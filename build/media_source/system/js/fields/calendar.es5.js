@@ -1029,18 +1029,19 @@
 					if (typeof calObj.params.dateClicked === 'undefined') {
 						calObj.inputField.setAttribute('data-local-value', calObj.inputField.value);
 
+						var date = Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings);
+
 						if (calObj.params.dateType !== 'gregorian') {
 							// We need to transform the date for the data-alt-value
-							var ndate, date = Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings);
-							ndate = Date.localCalToGregorian(date.getFullYear(), date.getMonth(), date.getDate());
+							//var ndate, date = Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings);
+							var ndate = Date.localCalToGregorian(date.getFullYear(), date.getMonth(), date.getDate());
 							date.setFullYear(ndate[0]);
 							date.setMonth(ndate[1]);
 							date.setDate(ndate[2]);
-							calObj.inputField.setAttribute('data-alt-value', date.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
-						} else {
-							calObj.inputField.setAttribute('data-alt-value', Date.parseFieldDate(calObj.inputField.value, calObj.params.dateFormat, calObj.params.dateType, calObj.strings)
-								.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
 						}
+
+						calObj.inputField.setAttribute('data-alt-value', date.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
+
 					} else {
 						calObj.inputField.setAttribute('data-alt-value', calObj.date.print(calObj.params.dateFormat, 'gregorian', false, calObj.strings));
 					}
