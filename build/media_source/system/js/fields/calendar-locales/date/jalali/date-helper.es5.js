@@ -2,7 +2,6 @@
 	'use strict';
 
 	var localNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-	var localNumbers = ['0','1','2','3','4','5','6','7','8','9'];
 
 /** BEGIN: DATE OBJECT PATCHES **/
 /** Adds the number of days array to the Date object. */
@@ -411,7 +410,7 @@ Date.parseFieldDate = function(str, fmt, dateType, localStrings) {
 			case "%Y":
 			case "%y":
 				y = parseInt(a[i], 10);
-				if(y < 100) {
+				if (y < 100) {
 					const twodigit = TWODIGITYEAR.find(val => val.datetype === dateType);
 					y += (y > twodigit.switch) ? twodigit.oldyear : twodigit.newyear;
 				} else if (y > 9999) {
@@ -424,7 +423,10 @@ Date.parseFieldDate = function(str, fmt, dateType, localStrings) {
 			case "%b":
 			case "%B":
 				for (j = 0; j < 12; ++j) {
-					if (localStrings.months[j].substring(0, a[i].length).toLowerCase() === a[i].toLowerCase()) { m = j; break; }
+					if (localStrings.months[j].substring(0, a[i].length).toLowerCase() === a[i].toLowerCase()) {
+						m = j;
+						break;
+					}
 				}
 				break;
 
@@ -463,7 +465,10 @@ Date.parseFieldDate = function(str, fmt, dateType, localStrings) {
 		if (a[i].search(/[a-zA-Z]+/) != -1) {
 			var t = -1;
 			for (j = 0; j < 12; ++j) {
-				if (localStrings.months[j].substring(0, a[i].length).toLowerCase() === a[i].toLowerCase()) { t = j; break; }
+				if (localStrings.months[j].substring(0, a[i].length).toLowerCase() === a[i].toLowerCase()) {
+					t = j;
+					break;
+				}
 			}
 			if (t != -1) {
 				if (m != -1) {
