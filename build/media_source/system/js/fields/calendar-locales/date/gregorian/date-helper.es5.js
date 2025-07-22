@@ -11,6 +11,17 @@
 	Date.DAY    = 24 * Date.HOUR;
 	Date.WEEK   =  7 * Date.DAY;
 
+	/** Constant for 2-digit years, used to switch between 1900 and 2000*/
+	/** e.g. y > 38 => 1900+y else 2000+y, so at 60 it becomes 1960 and 25 becomes 2025 */
+	/** history: November 2016 : 29,
+	 *             August 2025 : 38 */
+	let TWODIGITYEAR = [ { datetype: "gregorian", switch: 38, oldyear: 1900, newyear: 2000} ];
+	/** Jalali difference to switch b/w 1300 and 1400 */
+	/** Jalali year is about -621 compared to Gregorian */
+	/** history: November 2016 : 00 (only 1300),
+	 *             August 2025 : 17 */
+	TWODIGITYEAR.push({ datetype: "jalali" , switch: 17, oldyear: 1300, newyear: 1400});
+
 	/** MODIFY ONLY THE MARKED PARTS OF THE METHODS **/
 	/************ START *************/
 	/** INTERFACE METHODS FOR THE CALENDAR PICKER **/
@@ -270,7 +281,14 @@
 				case "%Y":
 				case "%y":
 					y = parseInt(a[i], 10);
-					(y < 100) && (y += (y > 29) ? 1900 : 2000);
+					if (y < 100) {
+						const tdy = TWODIGITYEAR.find(val => val.datetype === dateType);
+						y += (y > tdy.switch) ? tdy.oldyear : tdy.newyear;
+						console.warn("[287]Change year to: ", y, dateType); //TODO: remove test
+					} else if (y > 9999) {
+						y = 0;
+						// return null;
+					}
 					break;
 
 				case "%b":
@@ -334,7 +352,14 @@
 				m = a[i]-1;
 			} else if (parseInt(a[i], 10) > 31 && y == 0) {
 				y = parseInt(a[i], 10);
-				(y < 100) && (y += (y > 29) ? 1900 : 2000);
+				if (y < 100) {
+					const tdy = TWODIGITYEAR.find(val => val.datetype === dateType);
+					y += (y > tdy.switch) ? tdy.oldyear : tdy.newyear;
+					console.warn("[358]Change year to: ", y, dateType); //TODO: remove test
+				} else if (y > 9999) {
+					y = 0;
+					//return null;
+				}
 			} else if (d == 0) {
 				d = a[i];
 			}
@@ -403,7 +428,7 @@
 		// FIXME: %x : preferred date representation for the current locale without the time
 		// FIXME: %X : preferred time representation for the current locale without the date
 		s["%y"] = ('' + y).substring(2);                                                            // year without the century (range 00 to 99)
-		s["%Y"] = y;                                                                                // year with the century
+		s["%Y"] = y % 10000;                                                                        // year with the century (secured to max 9999)
 		s["%%"] = "%";                                                                              // a literal '%' character
 
 		var re = /%./g;
